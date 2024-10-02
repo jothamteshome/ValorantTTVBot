@@ -1,7 +1,12 @@
 import disnake
 import json
+import boto3
 
 from disnake.ext import commands
+
+# Access the boto3 client for DynamoDB
+session = boto3.Session(profile_name='ValAppAdminProfile')
+client = session.client('dynamodb', region_name='us-east-2')
 
 intents = disnake.Intents.all()
 
