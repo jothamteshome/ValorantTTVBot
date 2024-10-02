@@ -1,7 +1,9 @@
 import disnake
 import json
 import boto3
+import datetime
 
+from botocore.exceptions import ClientError
 from disnake.ext import commands
 
 # Access the boto3 client for DynamoDB
@@ -24,7 +26,32 @@ async def on_ready():
 
 @bot.slash_command(description="Add a Valorant user's TTV message")
 async def insert(inter, user: str, message: str):
-    await inter.response.send_message(f"Added {user} to database")
+    user = user.lower()
+    curr_time = datetime.datetime.now()
 
+    try:
+        response = client.put_item(
+            TableName='valorant_ttv_users',
+            Item={
+                "user_id": {'S' : user},
+                "messages": {
+                    'L': [
+                        {
+                            'M': {
+                                'text': {'S': message},
+                                'timestamp': {'S': f"{curr_time}"}
+                            }
+                        }
+                    ]
+                }
+            },
 
+        )
+
+        await inter.response.send_message(f"Added {user} to database")
+    except ClientError as err:
+        # Log the error with details
+        await inter.response.send_message(f"ClientError: {err}")
+
+    
 bot.run(TOKEN)
